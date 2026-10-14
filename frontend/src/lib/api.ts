@@ -23,10 +23,15 @@ export const JD_MAX_LENGTH = 20_000
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? ""
 
-// Free hosts (e.g. Render) sleep when idle. Ping on page load so the backend
-// is waking up while the user fills in the form.
-export function wakeBackend() {
-  fetch(`${API_BASE}/api/v1/health`).catch(() => {})
+export interface HealthResponse {
+  status: string
+  message: string
+}
+
+export async function checkHealth(signal?: AbortSignal): Promise<HealthResponse> {
+  const response = await fetch(`${API_BASE}/api/v1/health`, { signal, cache: "no-store" })
+  if (!response.ok) throw new ApiError(`Health check failed with status ${response.status}.`, response.status)
+  return (await response.json()) as HealthResponse
 }
 
 export class ApiError extends Error {

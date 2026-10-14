@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { FileSearch, RotateCcw, XCircle } from "lucide-react"
 import { toast } from "sonner"
 
+import { ApiStatus } from "@/components/api-status"
 import { GridBackground } from "@/components/aceternity/background"
 import { GlowCard } from "@/components/aceternity/glow-card"
 import { MultiStepLoader } from "@/components/aceternity/multi-step-loader"
@@ -10,7 +11,8 @@ import { MatchForm, type MatchDraft } from "@/components/match-form"
 import { ResultsView } from "@/components/results/results-view"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { createMatch, wakeBackend, type ResumeMatchResponse } from "@/lib/api"
+import { useApiHealth, type ApiHealth } from "@/hooks/use-api-health"
+import { createMatch, type ResumeMatchResponse } from "@/lib/api"
 import { sampleMatch } from "@/lib/sample"
 
 type ViewState =
@@ -38,7 +40,8 @@ export default function App() {
   const [draft, setDraft] = useState<MatchDraft>({ file: null, jobDescription: "" })
   const abortRef = useRef<AbortController | null>(null)
 
-  useEffect(wakeBackend, [])
+  // Also wakes a sleeping free-tier backend while the user fills in the form.
+  const health = useApiHealth()
 
   // Each view starts at the top; otherwise mobile users land mid-report.
   useEffect(() => {
@@ -92,7 +95,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           {view.status === "idle" && (
             <motion.div key="idle" {...pageTransition}>
-              <Hero />
+              <Hero health={health} />
               <MatchForm
                 initialDraft={draft}
                 onSubmit={analyze}
@@ -153,20 +156,10 @@ export default function App() {
   )
 }
 
-function Hero() {
+function Hero({ health }: { health: ApiHealth }) {
   return (
     <div className="mb-10 text-center">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground backdrop-blur"
-      >
-        <span className="relative flex size-2">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
-          <span className="relative inline-flex size-2 rounded-full bg-success" />
-        </span>
-        AI-powered resume matching
-      </motion.div>
+      <ApiStatus health={health} />
       <motion.h1
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
