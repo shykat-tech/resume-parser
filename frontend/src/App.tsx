@@ -40,6 +40,11 @@ export default function App() {
 
   useEffect(wakeBackend, [])
 
+  // Each view starts at the top; otherwise mobile users land mid-report.
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [view.status])
+
   const analyze = async ({ file, jobDescription }: { file: File; jobDescription: string }) => {
     setDraft({ file, jobDescription })
     const controller = new AbortController()
@@ -67,7 +72,6 @@ export default function App() {
 
   const reset = () => {
     setView({ status: "idle" })
-    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   return (
